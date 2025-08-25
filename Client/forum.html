@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Forum - Company Communication Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .message-bubble {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .notification-badge {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .typing-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #6b7280;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-indicator:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator:nth-child(2) { animation-delay: -0.16s; }
+        .typing-indicator:nth-child(3) { animation-delay: 0s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-comments text-blue-600 text-2xl mr-3"></i>
+                    <h1 class="text-xl font-bold text-gray-900">Employee Forum</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="notificationBtn" class="p-2 text-gray-600 hover:text-gray-900 relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1 notification-badge hidden">0</span>
+                        </button>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <span id="currentUserName">Employee</span>
+                    </div>
+                    <button onclick="window.location.href='dashboard.html'" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <!-- Forum Categories -->
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Forum Categories</h3>
+                    <div class="space-y-2">
+                        <button class="forum-category w-full text-left px-4 py-3 rounded-lg bg-blue-50 text-blue-700 border border-blue-200" data-category="general">
+                            <i class="fas fa-comments mr-2"></i>General Discussion
+                            <span class="float-right bg-blue-100 px-2 py-1 rounded-full text-xs" id="general-count">0</span>
+                        </button>
+                        <button class="forum-category w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50" data-category="announcements">
+                            <i class="fas fa-bullhorn mr-2"></i>Announcements
+                            <span class="float-right bg-gray-100 px-2 py-1 rounded-full text-xs" id="announcements-count">0</span>
+                        </button>
+                        <button class="forum-category w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50" data-category="help">
+                            <i class="fas fa-question-circle mr-2"></i>Help & Support
+                            <span class="float-right bg-gray-100 px-2 py-1 rounded-full text-xs" id="help-count">0</span>
+                        </button>
+                        <button class="forum-category w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50" data-category="social">
+                            <i class="fas fa-users mr-2"></i>Social
+                            <span class="float-right bg-gray-100 px-2 py-1 rounded-full text-xs" id="social-count">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Online Users -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Online Now</h3>
+                        <div id="onlineUsers" class="space-y-2">
+                            <!-- Online users will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                        <button id="newPostBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition mb-2">
+                            <i class="fas fa-plus mr-2"></i>New Post
+                        </button>
+                        <button id="directMessageBtn" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                            <i class="fas fa-envelope mr-2"></i>Direct Message
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-3">
+                <!-- Forum Posts -->
+                <div id="forumPosts" class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-bold text-gray-900" id="categoryTitle">General Discussion</h2>
+                            <div class="flex items-center space-x-2">
+                                <select id="sortPosts" class="border rounded-lg px-3 py-1 text-sm">
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="popular">Most Popular</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="postsContainer" class="divide-y">
+                        <!-- Posts will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create New Post Modal -->
+    <div id="newPostModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Create New Post</h3>
+                        <button id="closeNewPostModal" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="newPostForm" class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="postCategory" class="w-full border rounded-lg px-3 py-2" required>
+                            <option value="general">General Discussion</option>
+                            <option value="announcements">Announcements</option>
+                            <option value="help">Help & Support</option>
+                            <option value="social">Social</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                        <input type="text" id="postTitle" class="w-full border rounded-lg px-3 py-2" placeholder="Enter post title..." required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                        <textarea id="postContent" rows="6" class="w-full border rounded-lg px-3 py-2" placeholder="Write your post content..." required></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancelNewPost" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Create Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Direct Message Modal -->
+    <div id="directMessageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl h-3/4">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="text-lg font-semibold">Direct Messages</h3>
+                    <button id="closeDMModal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="flex h-full">
+                    <!-- Conversations List -->
+                    <div class="w-1/3 border-r bg-gray-50">
+                        <div class="p-4 border-b">
+                            <button id="newConversationBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                                <i class="fas fa-plus mr-2"></i>New Conversation
+                            </button>
+                        </div>
+                        <div id="conversationsList" class="overflow-y-auto" style="height: calc(100% - 80px);">
+                            <!-- Conversations will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Area -->
+                    <div class="w-2/3 flex flex-col">
+                        <div id="chatHeader" class="p-4 border-b bg-white hidden">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium" id="chatPartnerName"></h4>
+                                    <p class="text-sm text-gray-500" id="chatPartnerStatus">Online</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50 hidden">
+                            <!-- Messages will be populated here -->
+                        </div>
+                        
+                        <div id="messageInput" class="p-4 border-t bg-white hidden">
+                            <div class="flex space-x-2">
+                                <input type="text" id="messageText" class="flex-1 border rounded-lg px-3 py-2" placeholder="Type your message...">
+                                <button id="sendMessage" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="noChatSelected" class="flex-1 flex items-center justify-center text-gray-500">
+                            <div class="text-center">
+                                <i class="fas fa-comments text-4xl mb-4"></i>
+                                <p>Select a conversation to start messaging</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Conversation Modal -->
+    <div id="newConversationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-60">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Start New Conversation</h3>
+                        <button id="closeNewConversationModal" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Employee</label>
+                    <select id="conversationPartner" class="w-full border rounded-lg px-3 py-2 mb-4" required>
+                        <option value="">Choose an employee...</option>
+                    </select>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancelNewConversation" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Cancel</button>
+                        <button type="button" id="startConversation" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Start Chat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Forum Application Class
+        class EmployeeForum {
+            constructor() {
+                this.currentUser = this.getCurrentUser();
+                this.currentCategory = 'general';
+                this.currentConversation = null;
+                this.init();
+            }
+
+            /*getCurrentUser() {
+                // Get current user from localStorage or default
+                const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {
+                    id: 1,
+                    name: 'Admin User',
+                    employeeId: 'EMP001',
+                    email: 'admin@company.com'
+                };
+                document.getElementById('currentUserName').textContent = currentUser.name;
+                return currentUser;
+            }*/
+
+
+            getCurrentUser() {
+    // Try to get the complete user data stored during login
+    const currentUserData = sessionStorage.getItem('currentUserData');
+    
+    if (currentUserData) {
+        const currentUser = JSON.parse(currentUserData);
+        document.getElementById('currentUserName').textContent = currentUser.name;
+        return currentUser;
+    }
+    
+    // Fallback: get by name if complete data not available
+    const loggedInUserName = sessionStorage.getItem('loggedInUser');
+    
+    if (loggedInUserName) {
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const currentUser = users.find(user => 
+            user.name.toLowerCase() === loggedInUserName.toLowerCase()
+        );
+        
+        if (currentUser) {
+            document.getElementById('currentUserName').textContent = currentUser.name;
+            return currentUser;
+        }
+    }
+    
+    // If no logged in user found, redirect to login
+    console.log('No logged in user found, redirecting to login');
+    window.location.href = 'form.html';
+    return null;
+}
+
+            init() {
+                this.setupEventListeners();
+                this.loadForumPosts();
+                this.loadConversations();
+                this.updateOnlineUsers();
+                this.updateNotifications();
+                
+                // Auto-refresh every 30 seconds
+                setInterval(() => {
+                    this.loadForumPosts();
+                    this.updateOnlineUsers();
+                    this.updateNotifications();
+                }, 30000);
+            }
+
+            setupEventListeners() {
+                // Forum category switching
+                document.querySelectorAll('.forum-category').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.switchCategory(e.target.closest('.forum-category').dataset.category);
+                    });
+                });
+
+                // New post modal
+                document.getElementById('newPostBtn').addEventListener('click', () => {
+                    document.getElementById('newPostModal').classList.remove('hidden');
+                });
+
+                document.getElementById('closeNewPostModal').addEventListener('click', () => {
+                    document.getElementById('newPostModal').classList.add('hidden');
+                });
+
+                document.getElementById('cancelNewPost').addEventListener('click', () => {
+                    document.getElementById('newPostModal').classList.add('hidden');
+                });
+
+                // New post form
+                document.getElementById('newPostForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createNewPost();
+                });
+
+                // Direct message modal
+                document.getElementById('directMessageBtn').addEventListener('click', () => {
+                    document.getElementById('directMessageModal').classList.remove('hidden');
+                });
+
+                document.getElementById('closeDMModal').addEventListener('click', () => {
+                    document.getElementById('directMessageModal').classList.add('hidden');
+                });
+
+                // New conversation
+                document.getElementById('newConversationBtn').addEventListener('click', () => {
+                    this.loadEmployeesForConversation();
+                    document.getElementById('newConversationModal').classList.remove('hidden');
+                });
+
+                document.getElementById('closeNewConversationModal').addEventListener('click', () => {
+                    document.getElementById('newConversationModal').classList.add('hidden');
+                });
+
+                document.getElementById('cancelNewConversation').addEventListener('click', () => {
+                    document.getElementById('newConversationModal').classList.add('hidden');
+                });
+
+                document.getElementById('startConversation').addEventListener('click', () => {
+                    this.startNewConversation();
+                });
+
+                // Send message
+                document.getElementById('sendMessage').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                document.getElementById('messageText').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+
+                // Sort posts
+                document.getElementById('sortPosts').addEventListener('change', () => {
+                    this.loadForumPosts();
+                });
+            }
+
+            switchCategory(category) {
+                this.currentCategory = category;
+                
+                // Update active category button
+                document.querySelectorAll('.forum-category').forEach(btn => {
+                    btn.classList.remove('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+                    btn.classList.add('hover:bg-gray-50');
+                });
+                
+                document.querySelector(`[data-category="${category}"]`).classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+                document.querySelector(`[data-category="${category}"]`).classList.remove('hover:bg-gray-50');
+                
+                // Update category title
+                const titles = {
+                    general: 'General Discussion',
+                    announcements: 'Announcements',
+                    help: 'Help & Support',
+                    social: 'Social'
+                };
+                document.getElementById('categoryTitle').textContent = titles[category];
+                
+                // Load posts for this category
+                this.loadForumPosts();
+            }
+
+            createNewPost() {
+                const category = document.getElementById('postCategory').value;
+                const title = document.getElementById('postTitle').value;
+                const content = document.getElementById('postContent').value;
+
+                const post = {
+                    id: Date.now(),
+                    category,
+                    title,
+                    content,
+                    author: this.currentUser.name,
+                    authorId: this.currentUser.id,
+                    timestamp: new Date().toISOString(),
+                    likes: 0,
+                    replies: []
+                };
+
+                // Save post
+                const posts = JSON.parse(localStorage.getItem('forumPosts')) || [];
+                posts.unshift(post);
+                localStorage.setItem('forumPosts', JSON.stringify(posts));
+
+                // Clear form and close modal
+                document.getElementById('newPostForm').reset();
+                document.getElementById('newPostModal').classList.add('hidden');
+
+                // Refresh posts
+                this.loadForumPosts();
+            }
+
+            loadForumPosts() {
+                const posts = JSON.parse(localStorage.getItem('forumPosts')) || [];
+                const categoryPosts = posts.filter(post => post.category === this.currentCategory);
+                
+                // Sort posts
+                const sortBy = document.getElementById('sortPosts').value;
+                if (sortBy === 'newest') {
+                    categoryPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                } else if (sortBy === 'oldest') {
+                    categoryPosts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                } else if (sortBy === 'popular') {
+                    categoryPosts.sort((a, b) => b.likes - a.likes);
+                }
+
+                const container = document.getElementById('postsContainer');
+                container.innerHTML = '';
+
+                if (categoryPosts.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 text-center text-gray-500">
+                            <i class="fas fa-comments text-4xl mb-4"></i>
+                            <p>No posts in this category yet. Be the first to start a discussion!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                categoryPosts.forEach(post => {
+                    const postElement = this.createPostElement(post);
+                    container.appendChild(postElement);
+                });
+
+                // Update category counts
+                this.updateCategoryCounts();
+            }
+
+            createPostElement(post) {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'p-6 message-bubble';
+                
+                const timeAgo = this.getTimeAgo(new Date(post.timestamp));
+                
+                postDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">${post.author}</h4>
+                                <p class="text-sm text-gray-500">${timeAgo}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="like-btn text-gray-400 hover:text-red-500" data-post-id="${post.id}">
+                                <i class="fas fa-heart mr-1"></i>
+                                <span>${post.likes}</span>
+                            </button>
+                            <button class="reply-btn text-gray-400 hover:text-blue-500" data-post-id="${post.id}">
+                                <i class="fas fa-reply mr-1"></i>
+                                <span>${post.replies.length}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">${post.title}</h3>
+                    <p class="text-gray-700 whitespace-pre-wrap">${post.content}</p>
+                    
+                    ${post.replies.length > 0 ? `
+                        <div class="mt-4 pl-4 border-l-2 border-gray-200">
+                            <div class="text-sm text-gray-600 mb-2">Replies:</div>
+                            ${post.replies.map(reply => `
+                                <div class="mb-3 p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center mb-1">
+                                        <strong class="text-sm">${reply.author}</strong>
+                                        <span class="text-xs text-gray-500 ml-2">${this.getTimeAgo(new Date(reply.timestamp))}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-700">${reply.content}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="reply-form-${post.id} mt-4 hidden">
+                        <div class="flex space-x-2">
+                            <input type="text" class="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="Write a reply..." id="reply-input-${post.id}">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm" onclick="forum.addReply(${post.id})">
+                                Reply
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Add event listeners
+                postDiv.querySelector('.like-btn').addEventListener('click', () => {
+                    this.toggleLike(post.id);
+                });
+
+                postDiv.querySelector('.reply-btn').addEventListener('click', () => {
+                    const replyForm = postDiv.querySelector(`.reply-form-${post.id}`);
+                    replyForm.classList.toggle('hidden');
+                    if (!replyForm.classList.contains('hidden')) {
+                        postDiv.querySelector(`#reply-input-${post.id}`).focus();
+                    }
+                });
+
+                return postDiv;
+            }
+
+            toggleLike(postId) {
+                const posts = JSON.parse(localStorage.getItem('forumPosts')) || [];
+                const postIndex = posts.findIndex(p => p.id === postId);
+                
+                if (postIndex !== -1) {
+                    posts[postIndex].likes = (posts[postIndex].likes || 0) + 1;
+                    localStorage.setItem('forumPosts', JSON.stringify(posts));
+                    this.loadForumPosts();
+                }
+            }
+
+            addReply(postId) {
+                const replyContent = document.getElementById(`reply-input-${postId}`).value.trim();
+                if (!replyContent) return;
+
+                const posts = JSON.parse(localStorage.getItem('forumPosts')) || [];
+                const postIndex = posts.findIndex(p => p.id === postId);
+                
+                if (postIndex !== -1) {
+                    const reply = {
+                        id: Date.now(),
+                        content: replyContent,
+                        author: this.currentUser.name,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    posts[postIndex].replies.push(reply);
+                    localStorage.setItem('forumPosts', JSON.stringify(posts));
+                    this.loadForumPosts();
+                }
+            }
+
+            updateCategoryCounts() {
+                const posts = JSON.parse(localStorage.getItem('forumPosts')) || [];
+                const categories = ['general', 'announcements', 'help', 'social'];
+                
+                categories.forEach(category => {
+                    const count = posts.filter(post => post.category === category).length;
+                    document.getElementById(`${category}-count`).textContent = count;
+                });
+            }
+
+            loadEmployeesForConversation() {
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const select = document.getElementById('conversationPartner');
+                select.innerHTML = '<option value="">Choose an employee...</option>';
+                
+                users.forEach(user => {
+                    if (user.id !== this.currentUser.id) {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = `${user.name} (${user.employeeId || 'N/A'})`;
+                        select.appendChild(option);
+                    }
+                });
+            }
+
+            startNewConversation() {
+                const partnerId = document.getElementById('conversationPartner').value;
+                if (!partnerId) return;
+
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const partner = users.find(u => u.id == partnerId);
+                if (!partner) return;
+
+                // Create conversation
+                const conversations = JSON.parse(localStorage.getItem('conversations')) || [];
+                const existingConversation = conversations.find(c => 
+                    (c.participants.includes(this.currentUser.id) && c.participants.includes(parseInt(partnerId)))
+                );
+
+                if (!existingConversation) {
+                    const newConversation = {
+                        id: Date.now(),
+                        participants: [this.currentUser.id, parseInt(partnerId)],
+                        messages: [],
+                        lastMessage: null,
+                        updatedAt: new Date().toISOString()
+                    };
+                    conversations.push(newConversation);
+                    localStorage.setItem('conversations', JSON.stringify(conversations));
+                }
+
+                document.getElementById('newConversationModal').classList.add('hidden');
+                this.loadConversations();
+                this.openConversation(existingConversation ? existingConversation.id : newConversation.id);
+            }
+
+            loadConversations() {
+                const conversations = JSON.parse(localStorage.getItem('conversations')) || [];
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const container = document.getElementById('conversationsList');
+                
+                const userConversations = conversations.filter(c => 
+                    c.participants.includes(this.currentUser.id)
+                );
+
+                container.innerHTML = '';
+
+                if (userConversations.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-4 text-center text-gray-500">
+                            <p class="text-sm">No conversations yet</p>
+                        </div>
+                    `;
+                    return;
+
+                                    }
+
+                userConversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+                userConversations.forEach(conversation => {
+                    const partnerId = conversation.participants.find(id => id !== this.currentUser.id);
+                    const partner = users.find(u => u.id === partnerId);
+                    
+                    if (!partner) return;
+
+                    const lastMessage = conversation.messages[conversation.messages.length - 1];
+                    const lastMessagePreview = lastMessage ? 
+                        (lastMessage.sender === this.currentUser.id ? 'You: ' : '') + 
+                        (lastMessage.content.length > 20 ? 
+                            lastMessage.content.substring(0, 20) + '...' : 
+                            lastMessage.content) : 
+                        'No messages yet';
+
+                    const conversationElement = document.createElement('div');
+                    conversationElement.className = `p-3 border-b hover:bg-gray-100 cursor-pointer ${this.currentConversation === conversation.id ? 'bg-blue-50' : ''}`;
+                    conversationElement.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-gray-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium">${partner.name}</h4>
+                                <p class="text-sm text-gray-500 truncate">${lastMessagePreview}</p>
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                ${this.getTimeAgo(new Date(conversation.updatedAt))}
+                            </div>
+                        </div>
+                    `;
+
+                    conversationElement.addEventListener('click', () => {
+                        this.openConversation(conversation.id);
+                    });
+
+                    container.appendChild(conversationElement);
+                });
+            }
+
+            openConversation(conversationId) {
+                this.currentConversation = conversationId;
+                const conversations = JSON.parse(localStorage.getItem('conversations')) || [];
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                
+                const conversation = conversations.find(c => c.id === conversationId);
+                if (!conversation) return;
+
+                const partnerId = conversation.participants.find(id => id !== this.currentUser.id);
+                const partner = users.find(u => u.id === partnerId);
+                if (!partner) return;
+
+                // Update UI
+                document.getElementById('chatHeader').classList.remove('hidden');
+                document.getElementById('messagesContainer').classList.remove('hidden');
+                document.getElementById('messageInput').classList.remove('hidden');
+                document.getElementById('noChatSelected').classList.add('hidden');
+
+                document.getElementById('chatPartnerName').textContent = partner.name;
+                document.getElementById('chatPartnerStatus').textContent = 'Online';
+
+                // Load messages
+                this.loadMessages(conversationId);
+
+                // Highlight active conversation
+                document.querySelectorAll('#conversationsList > div').forEach(el => {
+                    el.classList.remove('bg-blue-50');
+                    if (el.getAttribute('data-conversation-id') == conversationId) {
+                        el.classList.add('bg-blue-50');
+                    }
+                });
+            }
+
+            loadMessages(conversationId) {
+                const conversations = JSON.parse(localStorage.getItem('conversations')) || [];
+                const conversation = conversations.find(c => c.id === conversationId);
+                if (!conversation) return;
+
+                const container = document.getElementById('messagesContainer');
+                container.innerHTML = '';
+
+                conversation.messages.forEach(message => {
+                    const isCurrentUser = message.sender === this.currentUser.id;
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `mb-3 ${isCurrentUser ? 'text-right' : 'text-left'}`;
+                    
+                    messageElement.innerHTML = `
+                        <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isCurrentUser ? 'bg-blue-600 text-white' : 'bg-white border'} message-bubble">
+                            <p class="whitespace-pre-wrap">${message.content}</p>
+                            <div class="text-xs mt-1 ${isCurrentUser ? 'text-blue-200' : 'text-gray-500'}">
+                                ${this.getTimeAgo(new Date(message.timestamp))}
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(messageElement);
+                });
+
+                // Scroll to bottom
+                container.scrollTop = container.scrollHeight;
+            }
+
+            sendMessage() {
+                const messageInput = document.getElementById('messageText');
+                const content = messageInput.value.trim();
+                if (!content || !this.currentConversation) return;
+
+                const conversations = JSON.parse(localStorage.getItem('conversations')) || [];
+                const conversationIndex = conversations.findIndex(c => c.id === this.currentConversation);
+                
+                if (conversationIndex === -1) return;
+
+                const newMessage = {
+                    id: Date.now(),
+                    sender: this.currentUser.id,
+                    content,
+                    timestamp: new Date().toISOString()
+                };
+
+                conversations[conversationIndex].messages.push(newMessage);
+                conversations[conversationIndex].lastMessage = newMessage;
+                conversations[conversationIndex].updatedAt = new Date().toISOString();
+                
+                localStorage.setItem('conversations', JSON.stringify(conversations));
+                
+                // Update UI
+                messageInput.value = '';
+                this.loadMessages(this.currentConversation);
+                this.loadConversations();
+            }
+
+            updateOnlineUsers() {
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const container = document.getElementById('onlineUsers');
+                container.innerHTML = '';
+
+                // Simulate some online users (in a real app, this would come from server)
+                const onlineUserIds = [1, 2, 3, 4]; // Example IDs
+                const onlineUsers = users.filter(u => onlineUserIds.includes(u.id) && u.id !== this.currentUser.id);
+
+                if (onlineUsers.length === 0) {
+                    container.innerHTML = '<p class="text-sm text-gray-500">No other users online</p>';
+                    return;
+                }
+
+                onlineUsers.forEach(user => {
+                    const userElement = document.createElement('div');
+                    userElement.className = 'flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer';
+                    userElement.innerHTML = `
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-user text-green-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium">${user.name}</h4>
+                            <p class="text-xs text-gray-500">${user.employeeId || 'N/A'}</p>
+                        </div>
+                        <div class="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
+                    `;
+
+                    userElement.addEventListener('click', () => {
+                        // Start a conversation with this user
+                        this.startDirectConversation(user.id);
+                    });
+
+                    container.appendChild(userElement);
+                });
+            }
+
+            startDirectConversation(userId) {
+                const conversations = JSON.parse(localStorage.getItem('conversations')) || [];
+                const existingConversation = conversations.find(c => 
+                    c.participants.includes(this.currentUser.id) && c.participants.includes(userId)
+                );
+
+                if (existingConversation) {
+                    this.openConversation(existingConversation.id);
+                } else {
+                    // Create new conversation
+                    const newConversation = {
+                        id: Date.now(),
+                        participants: [this.currentUser.id, userId],
+                        messages: [],
+                        lastMessage: null,
+                        updatedAt: new Date().toISOString()
+                    };
+                    conversations.push(newConversation);
+                    localStorage.setItem('conversations', JSON.stringify(conversations));
+                    this.loadConversations();
+                    this.openConversation(newConversation.id);
+                }
+
+                document.getElementById('directMessageModal').classList.remove('hidden');
+            }
+
+            updateNotifications() {
+                // Simulate some notifications
+                const notifications = [
+                    { id: 1, message: 'New reply to your post', read: false },
+                    { id: 2, message: '3 new messages in General Discussion', read: false }
+                ];
+
+                const unreadCount = notifications.filter(n => !n.read).length;
+                const badge = document.getElementById('notificationBadge');
+
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            getTimeAgo(date) {
+                const seconds = Math.floor((new Date() - date) / 1000);
+        
+                let interval = Math.floor(seconds / 31536000);
+                if (interval >= 1) return interval + " year" + (interval === 1 ? "" : "s") + " ago";
+        
+                interval = Math.floor(seconds / 2592000);
+                if (interval >= 1) return interval + " month" + (interval === 1 ? "" : "s") + " ago";
+        
+                interval = Math.floor(seconds / 86400);
+                if (interval >= 1) return interval + " day" + (interval === 1 ? "" : "s") + " ago";
+        
+                interval = Math.floor(seconds / 3600);
+                if (interval >= 1) return interval + " hour" + (interval === 1 ? "" : "s") + " ago";
+        
+                interval = Math.floor(seconds / 60);
+                if (interval >= 1) return interval + " minute" + (interval === 1 ? "" : "s") + " ago";
+        
+                return Math.floor(seconds) + " second" + (seconds === 1 ? "" : "s") + " ago";
+            }
+        
+            updateNotifications() {
+                // Stub: implement notification logic if needed
+                // For now, just hide the notification badge
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    badge.classList.add('hidden');
+                }
+            }
+        }
+
+        // Initialize the forum when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.forum = new EmployeeForum();
+            
+            // Add some sample data if none exists
+            if (!localStorage.getItem('forumPosts')) {
+                const samplePosts = [
+                    {
+                        id: 1,
+                        category: 'general',
+                        title: 'Welcome to our Employee Forum!',
+                        content: 'This is where we can discuss work-related topics, share ideas, and support each other. Feel free to start new discussions!',
+                        author: 'Admin User',
+                        authorId: 1,
+                        timestamp: new Date().toISOString(),
+                        likes: 5,
+                        replies: [
+                            {
+                                id: 101,
+                                content: 'Thanks for setting this up! Looking forward to great discussions.',
+                                author: 'Jane Smith',
+                                timestamp: new Date(Date.now() - 3600000).toISOString()
+                            }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        category: 'announcements',
+                        title: 'Monthly Team Meeting Reminder',
+                        content: 'Just a reminder that we have our monthly team meeting this Friday at 10 AM in the main conference room.',
+                        author: 'Admin User',
+                        authorId: 1,
+                        timestamp: new Date(Date.now() - 86400000).toISOString(),
+                        likes: 3,
+                        replies: []
+                    }
+                ];
+                localStorage.setItem('forumPosts', JSON.stringify(samplePosts));
+            }
+
+            if (!localStorage.getItem('users')) {
+                const sampleUsers = [
+                    { id: 1, name: 'Admin User', employeeId: 'EMP001', email: 'admin@company.com' },
+                    { id: 2, name: 'Jane Smith', employeeId: 'EMP002', email: 'jane@company.com' },
+                    { id: 3, name: 'John Doe', employeeId: 'EMP003', email: 'john@company.com' },
+                    { id: 4, name: 'Sarah Johnson', employeeId: 'EMP004', email: 'sarah@company.com' }
+                ];
+                localStorage.setItem('users', JSON.stringify(sampleUsers));
+            }
+        });
+        
+
+
+
+
+
+
+        // second
+
+
+//forum.initializeWithAdminPosts()
+    </script>
+</body>
+</html>
