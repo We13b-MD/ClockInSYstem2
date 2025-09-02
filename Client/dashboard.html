@@ -999,7 +999,7 @@ function updateUserDisplay() {
     const currentUser = getCurrentUserData();
     
     if (currentUser) {
-        console.log('Current user data from localStorage:', currentUser); // Debug log
+        //console.log('Current user data from localStorage:', currentUser); // Debug log
         
         // Update userData object with current user's data
         // Since signup saves as 'role', we use that field for position
@@ -1011,7 +1011,7 @@ function updateUserDisplay() {
             position: currentUser.role || "Not Specified"    // This is the key fix!
         };
         
-        console.log('Updated userData object:', userData); // Debug log
+        //console.log('Updated userData object:', userData); // Debug log
         
         // Update basic user info
         const employeeNameElement = document.getElementById('employeeName');
@@ -1074,7 +1074,7 @@ function updateUserDisplay() {
             currentUser.employeeId !== userData.id ||
             currentUser.position !== userData.position
         )) {
-            console.log('User data changed, updating display...');
+            //console.log('User data changed, updating display...');
             updateUserDisplay();
             populateActivityTable();
         }
