@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
   },
   "keywords": [],
   "author": "",
@@ -11,6 +14,9 @@
   "description": "",
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "jest": "^30.1.2",
+    "jest-environment-jsdom": "^30.1.2",
+    "jsdom": "^26.1.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.5"
   },
