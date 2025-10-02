@@ -281,6 +281,36 @@ describe('Settings Page Critical Functions', () => {
         });
     });
 
+
+    beforeEach(() => {
+  // Mock sessionStorage
+  Object.defineProperty(window, 'sessionStorage', {
+    value: {
+      getItem: jest.fn(),
+      setItem: jest.fn(),
+      removeItem: jest.fn(),
+      clear: jest.fn()
+    },
+    writable: true
+  });
+
+  // Mock localStorage
+  Object.defineProperty(window, 'localStorage', {
+    value: {
+      getItem: jest.fn(),
+      setItem: jest.fn(),
+      removeItem: jest.fn(),
+      clear: jest.fn()
+    },
+    writable: true
+  });
+
+  // Mock window.location
+  delete window.location;
+  window.location = { href: '' };
+});
+
+
   describe('handleDeleteAccount - CRITICAL for Data Security', () => {
         test('should successfully delete user account and clear session', () => {
             const users = [

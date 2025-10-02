@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.0/axe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.7.2/axe.min.js"></script>
     
     <script type="text/javascript">
         window.tailwind.config = {
@@ -430,6 +432,8 @@
                 </div>
             </div>
         </div>
+
+        <div id="results-content"></div>
     </div>
 
     <script>
@@ -811,6 +815,95 @@
         });
 
 
+
+        // Accessibility tests
+
+         async function runAccessibilityTests() {
+    const resultsDiv = document.getElementById('results-content');
+    
+    // Safety check to ensure the results container exists
+    if (!resultsDiv) {
+        console.error('Results container not found. Make sure an element with id="results-content" exists.');
+        return;
+    }
+    
+    try {
+        // Run axe-core against the sidebar navigation (using the ID selector)
+        const results = await axe.run('#sidebar');
+        
+        // Display results
+        let html = '';
+        
+        // Violations
+        if (results.violations.length === 0) {
+           
+        } else {
+            html += '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">';
+            html += `<p class="font-bold">✗ Found ${results.violations.length} violations:</p>`;
+            html += '<ul class="list-disc ml-5 mt-2">';
+            results.violations.forEach(violation => {
+                html += `<li class="mb-2">`;
+                html += `<strong>${violation.id}</strong>: ${violation.description}`;
+                html += `<br><span class="text-sm">Impact: ${violation.impact}</span>`;
+                html += `<br><span class="text-sm">Affected elements: ${violation.nodes.length}</span>`;
+                html += `</li>`;
+            });
+            html += '</ul></div>';
+        }
+        
+        // Passes
+        html += '<div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">';
+       // html += `<p class="font-bold">✓ Passed ${results.passes.length} checks</p>`;
+        //html += '<details class="mt-2"><summary class="cursor-pointer">View passed checks</summary>';
+        //html += '<ul class="list-disc ml-5 mt-2">';
+       /* results.passes.forEach(pass => {
+            html += `<li class="text-sm">${pass.id}: ${pass.description}</li>`;
+        });
+        html += '</ul></details></div>';*/
+        
+        // Incomplete
+        /*if (results.incomplete.length > 0) {
+            html += '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">';
+            html += `<p class="font-bold">⚠ ${results.incomplete.length} incomplete checks (need manual review)</p>`;
+            html += '<ul class="list-disc ml-5 mt-2">';
+            results.incomplete.forEach(incomplete => {
+                html += `<li class="text-sm">${incomplete.id}: ${incomplete.description}</li>`;
+            });
+            html += '</ul></div>';
+        }*/
+        
+        // Summary
+        /*html += '<div class="bg-gray-100 p-4 rounded">';
+        html += '<h3 class="font-semibold mb-2">Summary</h3>';
+        html += `<p>Total tests run: ${results.passes.length + results.violations.length + results.incomplete.length}</p>`;
+        html += `<p>Violations: ${results.violations.length}</p>`;
+        html += `<p>Passes: ${results.passes.length}</p>`;
+        html += `<p>Incomplete: ${results.incomplete.length}</p>`;
+        html += '</div>';*/
+        
+       // resultsDiv.innerHTML = html;
+        
+        // Log to console for detailed inspection
+        console.log('Accessibility Test Results:', results);
+        
+    } catch (error) {
+        resultsDiv.innerHTML = `
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <p class="font-bold">Error running tests:</p>
+                <p>${error.message}</p>
+            </div>
+        `;
+        console.error('Accessibility testing error:', error);
+    }
+}
+
+// Run tests when page loads
+window.addEventListener('load', runAccessibilityTests);
+        // Run tests when page loads
+        window.addEventListener('load', runAccessibilityTests);
+       
+
+        
      
     </script>
 </body>
